@@ -561,8 +561,8 @@ function prepareAttendanceSheet() {
     if (dayRecord && dayRecord[student.id]) {
       currentMarkingSheet[student.id] = dayRecord[student.id];
     } else {
-      // Default to present for new attendance checks
-      currentMarkingSheet[student.id] = 'present';
+      // Default to absent for new attendance checks to match home list default
+      currentMarkingSheet[student.id] = 'absent';
     }
   });
 
