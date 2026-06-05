@@ -580,32 +580,56 @@ function renderAttendanceSheet() {
     return;
   }
 
-  attendanceSheetListEl.innerHTML = students.map(student => {
-    const status = currentMarkingSheet[student.id] || 'present';
-    const isPresent = status === 'present';
-    const activeClass = isPresent ? 'present' : 'absent';
-    const activeText = isPresent ? 'Present' : 'Absent';
-    
-    // Status specific checkmark/cross SVGs
-    const iconSVG = isPresent 
-      ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+  const absentList = [];
+  const presentList = [];
 
-    return `
-      <li class="attendance-mark-card">
-        <div class="attendance-name-wrapper">
-          <div class="student-initials-badge">
-            ${getInitials(student.name)}
-          </div>
-          <span class="attendance-mark-name">${escapeHTML(student.name)}</span>
+  students.forEach(student => {
+    const status = currentMarkingSheet[student.id] || 'absent';
+    if (status === 'present') {
+      presentList.push(student);
+    } else {
+      absentList.push(student);
+    }
+  });
+
+  let html = '';
+
+  if (absentList.length > 0) {
+    html += `<li class="list-section-title text-danger" style="margin-top: 4px; margin-bottom: 8px; list-style: none;">Absent (${absentList.length})</li>`;
+    html += absentList.map(student => renderMarkingCard(student, false)).join('');
+  }
+
+  if (presentList.length > 0) {
+    html += `<li class="list-section-title text-success" style="margin-top: 16px; margin-bottom: 8px; list-style: none;">Present (${presentList.length})</li>`;
+    html += presentList.map(student => renderMarkingCard(student, true)).join('');
+  }
+
+  attendanceSheetListEl.innerHTML = html;
+}
+
+function renderMarkingCard(student, isPresent) {
+  const activeClass = isPresent ? 'present' : 'absent';
+  const activeText = isPresent ? 'Present' : 'Absent';
+  
+  // Status specific checkmark/cross SVGs
+  const iconSVG = isPresent 
+    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+  return `
+    <li class="attendance-mark-card">
+      <div class="attendance-name-wrapper">
+        <div class="student-initials-badge">
+          ${getInitials(student.name)}
         </div>
-        <button class="btn-status-toggle ${activeClass}" onclick="toggleAttendanceStatus('${student.id}')" aria-label="Toggle attendance status for ${escapeHTML(student.name)}">
-          ${iconSVG}
-          <span>${activeText}</span>
-        </button>
-      </li>
-    `;
-  }).join('');
+        <span class="attendance-mark-name">${escapeHTML(student.name)}</span>
+      </div>
+      <button class="btn-status-toggle ${activeClass}" onclick="toggleAttendanceStatus('${student.id}')" aria-label="Toggle attendance status for ${escapeHTML(student.name)}">
+        ${iconSVG}
+        <span>${activeText}</span>
+      </button>
+    </li>
+  `;
 }
 
 // Toggle attendance status (present <-> absent)
