@@ -527,8 +527,9 @@ body {
 
 .modal-card {
   background-color: var(--bg-secondary);
-  width: 100%;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: calc(100% - 32px);
+  margin: 0 16px 50px; /* Shift up by 50px and center horizontally */
+  border-radius: var(--radius-lg); /* Rounded corners all around */
   padding: 24px;
   box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
   display: flex;
