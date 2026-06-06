@@ -1163,3 +1163,54 @@ body {
   padding-bottom: 12px; /* Breathing room at the bottom of lists */
   padding-right: 4px; /* Prevent scrollbar overlapping list content */
 }
+
+/* Login View Styles */
+.login-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-logo-wrapper {
+  width: 54px;
+  height: 54px;
+  background-color: var(--color-highlight-light);
+  color: var(--color-highlight);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-logo-wrapper svg {
+  width: 26px;
+  height: 26px;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: capitalize;
+  letter-spacing: -0.5px;
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: -4px;
+}

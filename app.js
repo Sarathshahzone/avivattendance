@@ -18,6 +18,7 @@ let sheetUrl = localStorage.getItem('attendance_app_sheet_url') || '';
 
 // DOM Elements
 const views = {
+  login: document.getElementById('view-login'),
   home: document.getElementById('view-home'),
   editStudentList: document.getElementById('view-edit-student-list'),
   markAttendance: document.getElementById('view-mark-attendance'),
@@ -99,18 +100,26 @@ function init() {
     todayDateDisplayEl.textContent = todayDate.toLocaleDateString('en-US', options);
   }
 
-  // Google Sheets integration setup
-  updateSyncStatusBadge();
-  if (sheetUrl) {
-    fetchDataFromSheets();
-  } else {
-    renderStudentList();
-  }
-  
   // Set date input default to today
   const today = getLocalDateString(todayDate);
   attendanceDateInput.value = today;
   attendanceDateInput.max = today; // Prevent marking attendance in future
+
+  // Google Sheets integration setup
+  updateSyncStatusBadge();
+  
+  // Auth Check
+  const authenticated = localStorage.getItem('attendance_app_authenticated') === 'true';
+  if (authenticated) {
+    navigateTo('view-home');
+    if (sheetUrl) {
+      fetchDataFromSheets();
+    } else {
+      renderStudentList();
+    }
+  } else {
+    navigateTo('view-login');
+  }
 }
 
 // Format date helper: YYYY-MM-DD local time safe
@@ -357,6 +366,56 @@ function setupEventListeners() {
   btnBackFromDetails.addEventListener('click', () => {
     navigateTo('view-home');
   });
+
+  // Login form submission
+  const loginForm = document.getElementById('login-form');
+  const loginUsernameInput = document.getElementById('login-username');
+  const loginPasswordInput = document.getElementById('login-password');
+  const loginErrorMessage = document.getElementById('login-error-message');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = loginUsernameInput.value.trim();
+      const password = loginPasswordInput.value;
+      
+      loginErrorMessage.classList.add('hidden');
+      loginUsernameInput.classList.remove('error');
+      loginPasswordInput.classList.remove('error');
+
+      if (username === 'aviv123' && password === 'sarathanjo') {
+        localStorage.setItem('attendance_app_authenticated', 'true');
+        navigateTo('view-home');
+        if (sheetUrl) {
+          fetchDataFromSheets();
+        } else {
+          renderStudentList();
+        }
+      } else {
+        loginErrorMessage.textContent = 'Invalid username or password.';
+        loginErrorMessage.classList.remove('hidden');
+        if (username !== 'aviv123') loginUsernameInput.classList.add('error');
+        if (password !== 'sarathanjo') loginPasswordInput.classList.add('error');
+      }
+    });
+  }
+
+  // Logout menu item click
+  const menuOptLogout = document.getElementById('menu-opt-logout');
+  if (menuOptLogout) {
+    menuOptLogout.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownMenu.classList.add('hidden');
+      btnMenuToggle.setAttribute('aria-expanded', 'false');
+      
+      if (confirm('Are you sure you want to log out?')) {
+        localStorage.removeItem('attendance_app_authenticated');
+        if (loginUsernameInput) loginUsernameInput.value = '';
+        if (loginPasswordInput) loginPasswordInput.value = '';
+        navigateTo('view-login');
+      }
+    });
+  }
 }
 
 // Render the main Home list of students
