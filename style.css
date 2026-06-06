@@ -1137,3 +1137,29 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Prevent full page/viewport scrolling on mobile (no rubber-banding) */
+@media (max-width: 480px) {
+  html, body {
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* Make Home, Mark Attendance, and Edit List student lists scroll independently, leaving search/setup fixed */
+#view-home .app-content,
+#view-mark-attendance .app-content,
+#view-edit-student-list .app-content {
+  overflow-y: hidden;
+}
+
+#student-list,
+#attendance-sheet-list,
+#edit-student-list {
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 12px; /* Breathing room at the bottom of lists */
+  padding-right: 4px; /* Prevent scrollbar overlapping list content */
+}
