@@ -239,7 +239,7 @@ body {
 
 /* Sticky Footer */
 .app-footer {
-  padding: 16px 24px 24px;
+  padding: 16px 24px 74px; /* Move buttons up by 50px */
   background-color: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

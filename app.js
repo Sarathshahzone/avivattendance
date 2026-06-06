@@ -142,6 +142,7 @@ function loadData() {
 
   if (storedStudents) {
     students = JSON.parse(storedStudents);
+    students.sort((a, b) => a.name.localeCompare(b.name));
   } else {
     // Seed default students
     students = [
@@ -152,6 +153,7 @@ function loadData() {
       { id: 'st-5', name: 'Bruce Wayne' },
       { id: 'st-6', name: 'Selina Kyle' }
     ];
+    students.sort((a, b) => a.name.localeCompare(b.name));
     saveStudents();
   }
 
@@ -401,6 +403,11 @@ function renderStudentList() {
 
 // Render the management list of students with edit/delete buttons
 function renderEditStudentList() {
+  const editTitleEl = document.querySelector('#view-edit-student-list .app-title-small');
+  if (editTitleEl) {
+    editTitleEl.textContent = `Edit Student List (${students.length})`;
+  }
+  
   if (students.length === 0) {
     editStudentListEl.innerHTML = `
       <li class="empty-state">
@@ -484,6 +491,7 @@ function handleStudentFormSubmit(e) {
       syncActionToSheets("addStudent", { id: newId, name: name, dateCreated: dateCreatedStr })
         .then(() => {
           students.push({ id: newId, name: name, dateCreated: dateCreatedStr });
+          students.sort((a, b) => a.name.localeCompare(b.name));
           saveStudents();
           closeStudentModal();
           renderStudentList();
@@ -493,6 +501,7 @@ function handleStudentFormSubmit(e) {
         .finally(() => hideLoader());
     } else {
       students.push({ id: newId, name: name, dateCreated: dateCreatedStr });
+      students.sort((a, b) => a.name.localeCompare(b.name));
       saveStudents();
       closeStudentModal();
       renderStudentList();
@@ -505,6 +514,7 @@ function handleStudentFormSubmit(e) {
         .then(() => {
           const student = students.find(s => s.id === editingStudentId);
           if (student) student.name = name;
+          students.sort((a, b) => a.name.localeCompare(b.name));
           saveStudents();
           closeStudentModal();
           renderStudentList();
@@ -515,6 +525,7 @@ function handleStudentFormSubmit(e) {
     } else {
       const student = students.find(s => s.id === editingStudentId);
       if (student) student.name = name;
+      students.sort((a, b) => a.name.localeCompare(b.name));
       saveStudents();
       closeStudentModal();
       renderStudentList();
@@ -962,6 +973,7 @@ function fetchDataFromSheets() {
     })
     .then(data => {
       students = data.students || [];
+      students.sort((a, b) => a.name.localeCompare(b.name));
       attendanceRecords = data.attendance || {};
       
       // Save local mirror cache
