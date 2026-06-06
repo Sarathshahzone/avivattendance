@@ -1214,3 +1214,28 @@ body {
   color: var(--text-secondary);
   margin-top: -4px;
 }
+
+/* Style input fields to match button size and design requirements */
+.login-card input {
+  width: 100%;
+  padding: 14px 24px; /* Matches primary button padding */
+  border: none;
+  border-radius: var(--radius-md); /* Matches primary button border radius */
+  font-family: var(--font-family);
+  font-size: 16px; /* Matches primary button font size */
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  box-shadow: 0 0 0 1px #EBEBEB; /* Drop shadow: x=0, y=0, spread=1, color=#EBEBEB */
+  transition: var(--transition-fast);
+}
+
+.login-card input:focus {
+  box-shadow: 0 0 0 1.5px var(--color-highlight);
+  background-color: var(--bg-secondary);
+}
+
+.login-card input.error {
+  box-shadow: 0 0 0 1.5px var(--color-danger);
+  background-color: var(--color-danger-light);
+}
