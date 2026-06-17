@@ -785,6 +785,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding-bottom: 80px; /* Extra scrolling space at the bottom */
 }
 
 .month-section {
