@@ -1240,3 +1240,35 @@ body {
   box-shadow: 0 0 0 1.5px var(--color-danger);
   background-color: var(--color-danger-light);
 }
+
+/* Dropdown Select Element Styles */
+.select-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 15px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='grey' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+}
+
+.select-input:focus {
+  border-color: var(--color-highlight);
+  background-color: var(--bg-secondary);
+}
+
+/* Home Status Badge for Off Days */
+.home-status-badge.off-day {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}

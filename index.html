@@ -303,6 +303,14 @@
             <input type="text" id="student-name-input" placeholder="Enter full name" autocomplete="off" required aria-label="Student name input">
             <span id="modal-error-message" class="error-text hidden">Name cannot be empty.</span>
           </div>
+          <div class="input-group" style="margin-top: 14px;">
+            <label for="student-course-select" class="input-label">Course Duration</label>
+            <select id="student-course-select" class="select-input" aria-label="Course duration select">
+              <option value="6 Month">6 Month</option>
+              <option value="1 Year">1 Year</option>
+              <option value="4 Month">4 Month</option>
+            </select>
+          </div>
           <div class="modal-actions">
             <button type="button" id="btn-modal-cancel" class="btn-secondary">Cancel</button>
             <button type="submit" id="btn-modal-save" class="btn-primary btn-save">Save</button>

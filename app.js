@@ -136,6 +136,13 @@ function parseLocalDateString(dateStr) {
   return new Date(year, month - 1, day);
 }
 
+// Check if a date string represents a Saturday
+function isSaturday(dateStr) {
+  if (!dateStr) return false;
+  const dateObj = parseLocalDateString(dateStr);
+  return dateObj.getDay() === 6; // 6 is Saturday
+}
+
 // Generate Name Initials
 function getInitials(name) {
   if (!name) return '?';
@@ -151,16 +158,20 @@ function loadData() {
 
   if (storedStudents) {
     students = JSON.parse(storedStudents);
+    // Ensure all loaded students have a default course
+    students.forEach(student => {
+      if (!student.course) student.course = '6 Month';
+    });
     students.sort((a, b) => a.name.localeCompare(b.name));
   } else {
     // Seed default students
     students = [
-      { id: 'st-1', name: 'Ethan Hunt' },
-      { id: 'st-2', name: 'Jane Carter' },
-      { id: 'st-3', name: 'Marcus Aurelius' },
-      { id: 'st-4', name: 'Diana Prince' },
-      { id: 'st-5', name: 'Bruce Wayne' },
-      { id: 'st-6', name: 'Selina Kyle' }
+      { id: 'st-1', name: 'Ethan Hunt', course: '6 Month' },
+      { id: 'st-2', name: 'Jane Carter', course: '1 Year' },
+      { id: 'st-3', name: 'Marcus Aurelius', course: '4 Month' },
+      { id: 'st-4', name: 'Diana Prince', course: '1 Year' },
+      { id: 'st-5', name: 'Bruce Wayne', course: '6 Month' },
+      { id: 'st-6', name: 'Selina Kyle', course: '4 Month' }
     ];
     students.sort((a, b) => a.name.localeCompare(b.name));
     saveStudents();
@@ -437,12 +448,21 @@ function renderStudentList() {
   // Read today's saved records to show on Home Screen
   const todayStr = getLocalDateString(new Date());
   const todayRecord = attendanceRecords[todayStr];
+  const isTodaySaturday = isSaturday(todayStr);
 
   studentListEl.innerHTML = filteredStudents.map(student => {
-    // Default to 'absent' if today's attendance has not been saved yet
-    const status = (todayRecord && todayRecord[student.id]) ? todayRecord[student.id] : 'absent';
-    const statusClass = status === 'present' ? 'present' : 'absent';
-    const statusText = status === 'present' ? 'Present' : 'Absent';
+    let statusText = '';
+    let statusClass = '';
+
+    // If it's Saturday and student is "1 Year", show as "Off Day"
+    if (isTodaySaturday && student.course === '1 Year') {
+      statusClass = 'off-day';
+      statusText = 'Off Day';
+    } else {
+      const status = (todayRecord && todayRecord[student.id]) ? todayRecord[student.id] : 'absent';
+      statusClass = status === 'present' ? 'present' : 'absent';
+      statusText = status === 'present' ? 'Present' : 'Absent';
+    }
 
     return `
       <li class="student-card" data-id="${student.id}">
@@ -515,10 +535,12 @@ window.openStudentModal = function(action, id = null) {
   if (action === 'add') {
     modalTitleEl.textContent = 'Add Student';
     studentNameInput.value = '';
+    document.getElementById('student-course-select').value = '6 Month';
   } else {
-    modalTitleEl.textContent = 'Rename Student';
+    modalTitleEl.textContent = 'Rename/Edit Student';
     const student = students.find(s => s.id === id);
     studentNameInput.value = student ? student.name : '';
+    document.getElementById('student-course-select').value = student && student.course ? student.course : '6 Month';
   }
 
   studentModal.classList.remove('hidden');
@@ -533,6 +555,7 @@ function closeStudentModal() {
 function handleStudentFormSubmit(e) {
   e.preventDefault();
   const name = studentNameInput.value.trim();
+  const course = document.getElementById('student-course-select').value;
 
   if (!name) {
     modalErrorMessage.textContent = 'Name cannot be empty.';
@@ -547,9 +570,9 @@ function handleStudentFormSubmit(e) {
     
     if (sheetUrl) {
       showLoader("Adding student to Google Sheets...");
-      syncActionToSheets("addStudent", { id: newId, name: name, dateCreated: dateCreatedStr })
+      syncActionToSheets("addStudent", { id: newId, name: name, dateCreated: dateCreatedStr, course: course })
         .then(() => {
-          students.push({ id: newId, name: name, dateCreated: dateCreatedStr });
+          students.push({ id: newId, name: name, dateCreated: dateCreatedStr, course: course });
           students.sort((a, b) => a.name.localeCompare(b.name));
           saveStudents();
           closeStudentModal();
@@ -559,7 +582,7 @@ function handleStudentFormSubmit(e) {
         .catch(() => {})
         .finally(() => hideLoader());
     } else {
-      students.push({ id: newId, name: name, dateCreated: dateCreatedStr });
+      students.push({ id: newId, name: name, dateCreated: dateCreatedStr, course: course });
       students.sort((a, b) => a.name.localeCompare(b.name));
       saveStudents();
       closeStudentModal();
@@ -568,11 +591,14 @@ function handleStudentFormSubmit(e) {
     }
   } else {
     if (sheetUrl) {
-      showLoader("Renaming student on Google Sheets...");
-      syncActionToSheets("editStudent", { id: editingStudentId, name: name })
+      showLoader("Updating student on Google Sheets...");
+      syncActionToSheets("editStudent", { id: editingStudentId, name: name, course: course })
         .then(() => {
           const student = students.find(s => s.id === editingStudentId);
-          if (student) student.name = name;
+          if (student) {
+            student.name = name;
+            student.course = course;
+          }
           students.sort((a, b) => a.name.localeCompare(b.name));
           saveStudents();
           closeStudentModal();
@@ -583,7 +609,10 @@ function handleStudentFormSubmit(e) {
         .finally(() => hideLoader());
     } else {
       const student = students.find(s => s.id === editingStudentId);
-      if (student) student.name = name;
+      if (student) {
+        student.name = name;
+        student.course = course;
+      }
       students.sort((a, b) => a.name.localeCompare(b.name));
       saveStudents();
       closeStudentModal();
@@ -622,12 +651,18 @@ window.deleteStudent = function(id) {
 // Prepare the attendance marking sheet
 function prepareAttendanceSheet() {
   const selectedDate = attendanceDateInput.value;
+  const isSelectedDateSaturday = isSaturday(selectedDate);
   currentMarkingSheet = {};
 
   // Check if historical record exists for date
   const dayRecord = attendanceRecords[selectedDate];
 
   students.forEach(student => {
+    // Skip 1 Year students on Saturdays
+    if (isSelectedDateSaturday && student.course === '1 Year') {
+      return;
+    }
+    
     if (dayRecord && dayRecord[student.id]) {
       currentMarkingSheet[student.id] = dayRecord[student.id];
     } else {
@@ -650,10 +685,18 @@ function renderAttendanceSheet() {
     return;
   }
 
+  const selectedDate = attendanceDateInput.value;
+  const isSelectedDateSaturday = isSaturday(selectedDate);
+
   const absentList = [];
   const presentList = [];
 
   students.forEach(student => {
+    // Skip 1 Year students on Saturdays
+    if (isSelectedDateSaturday && student.course === '1 Year') {
+      return;
+    }
+
     const status = currentMarkingSheet[student.id] || 'absent';
     if (status === 'present') {
       presentList.push(student);
@@ -712,7 +755,13 @@ window.toggleAttendanceStatus = function(studentId) {
 
 // Shortcut buttons
 function applyAllAttendance(status) {
+  const selectedDate = attendanceDateInput.value;
+  const isSelectedDateSaturday = isSaturday(selectedDate);
+
   students.forEach(student => {
+    if (isSelectedDateSaturday && student.course === '1 Year') {
+      return;
+    }
     currentMarkingSheet[student.id] = status;
   });
   renderAttendanceSheet();
@@ -726,8 +775,13 @@ function saveAttendanceSheet() {
     return;
   }
 
+  const isSelectedDateSaturday = isSaturday(selectedDate);
   const dayRecords = {};
+  
   students.forEach(student => {
+    if (isSelectedDateSaturday && student.course === '1 Year') {
+      return;
+    }
     dayRecords[student.id] = currentMarkingSheet[student.id] || 'present';
   });
 
@@ -739,6 +793,9 @@ function saveAttendanceSheet() {
           attendanceRecords[selectedDate] = {};
         }
         students.forEach(student => {
+          if (isSelectedDateSaturday && student.course === '1 Year') {
+            return;
+          }
           attendanceRecords[selectedDate][student.id] = dayRecords[student.id];
         });
         saveRecords();
@@ -751,6 +808,9 @@ function saveAttendanceSheet() {
       attendanceRecords[selectedDate] = {};
     }
     students.forEach(student => {
+      if (isSelectedDateSaturday && student.course === '1 Year') {
+        return;
+      }
       attendanceRecords[selectedDate][student.id] = dayRecords[student.id];
     });
     saveRecords();
@@ -943,11 +1003,17 @@ function renderCalendarDayStats() {
 
   const dateStr = getLocalDateString(selectedCalendarDate);
   const dayRecord = attendanceRecords[dateStr];
+  const isSelectedDateSaturday = isSaturday(dateStr);
 
   const presentStudents = [];
   const absentStudents = [];
 
   students.forEach(student => {
+    // Skip 1 Year students on Saturdays
+    if (isSelectedDateSaturday && student.course === '1 Year') {
+      return;
+    }
+    
     // Default to absent if today's date or selected date record is missing
     const status = (dayRecord && dayRecord[student.id]) ? dayRecord[student.id] : 'absent';
     if (status === 'present') {
