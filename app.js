@@ -190,6 +190,10 @@ function loadData() {
       
       attendanceRecords[dateStr] = {};
       students.forEach((student, index) => {
+        // Skip 1 Year students on Saturdays in mock records
+        if (isSaturday(dateStr) && student.course === '1 Year') {
+          return;
+        }
         // Randomize attendance: Bruce Wayne is absent sometimes, Marcus Aurelius is always present
         let status = 'present';
         if (student.id === 'st-5' && i === 1) status = 'absent'; // Bruce Wayne absent yesterday
@@ -854,6 +858,11 @@ window.viewStudentDetails = function(studentId) {
   const sortedDates = Object.keys(attendanceRecords).sort((a, b) => b.localeCompare(a)); // Newest first
 
   sortedDates.forEach(dateStr => {
+    // Skip Saturdays for 1 Year students
+    if (student.course === '1 Year' && isSaturday(dateStr)) {
+      return;
+    }
+
     const records = attendanceRecords[dateStr];
     if (records && records[studentId]) {
       const status = records[studentId];
