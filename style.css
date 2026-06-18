@@ -19,6 +19,10 @@
   --color-danger-light: #fef2f2;
   --color-danger-hover: #dc2626;
   
+  --color-warning: #f59e0b;
+  --color-warning-light: #fffbeb;
+  --color-warning-hover: #d97706;
+  
   --border-color: #e2e8f0;
   
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
@@ -195,6 +199,11 @@ body {
 .home-status-badge.absent {
   background-color: var(--color-danger-light);
   color: var(--color-danger);
+}
+
+.home-status-badge.half {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
 }
 
 /* Icon Buttons */
@@ -850,6 +859,11 @@ body {
 .history-badge.absent {
   background-color: var(--color-danger-light);
   color: var(--color-danger);
+}
+
+.history-badge.half {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
 }
 
 .history-badge svg {

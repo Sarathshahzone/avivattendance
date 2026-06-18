@@ -198,6 +198,8 @@ function loadData() {
         let status = 'present';
         if (student.id === 'st-5' && i === 1) status = 'absent'; // Bruce Wayne absent yesterday
         if (student.id === 'st-6' && i === 2) status = 'absent'; // Selina Kyle absent 2 days ago
+        if (student.id === 'st-1' && i === 1) status = 'half';   // Ethan Hunt half day yesterday
+        if (student.id === 'st-2' && i === 2) status = 'half';   // Jane Carter half day 2 days ago
         if (index % 4 === 0 && i === 3) status = 'absent'; // Student 0 and 4 absent 3 days ago
         
         attendanceRecords[dateStr][student.id] = status;
@@ -463,9 +465,18 @@ function renderStudentList() {
       statusClass = 'off-day';
       statusText = 'Off Day';
     } else {
-      const status = (todayRecord && todayRecord[student.id]) ? todayRecord[student.id] : 'absent';
-      statusClass = status === 'present' ? 'present' : 'absent';
-      statusText = status === 'present' ? 'Present' : 'Absent';
+      const rawStatus = (todayRecord && todayRecord[student.id]) ? todayRecord[student.id] : 'absent';
+      const status = typeof rawStatus === 'string' ? rawStatus.trim().toLowerCase() : 'absent';
+      if (status === 'present') {
+        statusClass = 'present';
+        statusText = 'Present';
+      } else if (status === 'half') {
+        statusClass = 'half';
+        statusText = 'Half Day';
+      } else {
+        statusClass = 'absent';
+        statusText = 'Absent';
+      }
     }
 
     return `
@@ -865,9 +876,14 @@ window.viewStudentDetails = function(studentId) {
 
     const records = attendanceRecords[dateStr];
     if (records && records[studentId]) {
-      const status = records[studentId];
+      const rawStatus = records[studentId];
+      const status = typeof rawStatus === 'string' ? rawStatus.trim().toLowerCase() : 'absent';
       totalDays++;
-      if (status === 'present') presentCount++;
+      if (status === 'present') {
+        presentCount++;
+      } else if (status === 'half') {
+        presentCount += 0.5;
+      }
 
       // Extract month name and year (local safe naming)
       const dateObj = parseLocalDateString(dateStr);
@@ -915,13 +931,23 @@ window.viewStudentDetails = function(studentId) {
   } else {
     detailsHistoryContainer.innerHTML = months.map(monthName => {
       const dayCards = historyByMonth[monthName].map(item => {
-        const isPresent = item.status === 'present';
-        const badgeClass = isPresent ? 'present' : 'absent';
-        const badgeText = isPresent ? 'Present' : 'Absent';
+        let badgeClass = '';
+        let badgeText = '';
+        let badgeIcon = '';
         
-        const badgeIcon = isPresent
-          ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-          : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        if (item.status === 'present') {
+          badgeClass = 'present';
+          badgeText = 'Present';
+          badgeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        } else if (item.status === 'half') {
+          badgeClass = 'half';
+          badgeText = 'Half Day';
+          badgeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="2" x2="12" y2="22"></line></svg>`;
+        } else {
+          badgeClass = 'absent';
+          badgeText = 'Absent';
+          badgeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        }
 
         return `
           <li class="history-card">
@@ -1014,6 +1040,8 @@ function renderCalendarDayStats() {
   const dayRecord = attendanceRecords[dateStr];
   const isSelectedDateSaturday = isSaturday(dateStr);
 
+  let presentSum = 0;
+  let absentSum = 0;
   const presentStudents = [];
   const absentStudents = [];
 
@@ -1024,16 +1052,24 @@ function renderCalendarDayStats() {
     }
     
     // Default to absent if today's date or selected date record is missing
-    const status = (dayRecord && dayRecord[student.id]) ? dayRecord[student.id] : 'absent';
+    const rawStatus = (dayRecord && dayRecord[student.id]) ? dayRecord[student.id] : 'absent';
+    const status = typeof rawStatus === 'string' ? rawStatus.trim().toLowerCase() : 'absent';
     if (status === 'present') {
-      presentStudents.push(student);
+      presentSum += 1;
+      presentStudents.push({ student, label: '' });
+    } else if (status === 'half') {
+      presentSum += 0.5;
+      absentSum += 0.5;
+      presentStudents.push({ student, label: ' (Half Day)' });
+      absentStudents.push({ student, label: ' (Half Day)' });
     } else {
-      absentStudents.push(student);
+      absentSum += 1;
+      absentStudents.push({ student, label: '' });
     }
   });
 
-  calendarPresentCount.textContent = presentStudents.length;
-  calendarAbsentCount.textContent = absentStudents.length;
+  calendarPresentCount.textContent = presentSum;
+  calendarAbsentCount.textContent = absentSum;
 
   // Render present list
   if (presentStudents.length === 0) {
@@ -1043,13 +1079,13 @@ function renderCalendarDayStats() {
       </li>
     `;
   } else {
-    calendarPresentListEl.innerHTML = presentStudents.map(student => `
+    calendarPresentListEl.innerHTML = presentStudents.map(({ student, label }) => `
       <li class="student-card">
         <div class="student-initials-badge">
           ${getInitials(student.name)}
         </div>
         <div class="student-info">
-          <div class="student-name">${escapeHTML(student.name)}</div>
+          <div class="student-name">${escapeHTML(student.name)}${label}</div>
         </div>
       </li>
     `).join('');
@@ -1063,13 +1099,13 @@ function renderCalendarDayStats() {
       </li>
     `;
   } else {
-    calendarAbsentListEl.innerHTML = absentStudents.map(student => `
+    calendarAbsentListEl.innerHTML = absentStudents.map(({ student, label }) => `
       <li class="student-card">
         <div class="student-initials-badge" style="background-color: var(--color-danger-light); color: var(--color-danger); border-color: rgba(239, 68, 68, 0.1);">
           ${getInitials(student.name)}
         </div>
         <div class="student-info">
-          <div class="student-name">${escapeHTML(student.name)}</div>
+          <div class="student-name">${escapeHTML(student.name)}${label}</div>
         </div>
       </li>
     `).join('');
